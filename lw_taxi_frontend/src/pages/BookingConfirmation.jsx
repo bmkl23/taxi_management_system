@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Loader2, Car, MapPin, XCircle, CheckCircle } from 'lucide-react';
 
-const API_BASE_URL = 'https://taxibackend-git-main-bmkl-basnayakes-projects.vercel.app/api'; 
+const API_BASE_URL = 'https://taxibackend-two.vercel.app/api'; 
 const POLLING_INTERVAL = 5000; 
 
 

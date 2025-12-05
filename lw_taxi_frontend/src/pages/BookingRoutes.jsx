@@ -5,7 +5,7 @@ import "leaflet/dist/leaflet.css";
 import axios from "axios";
 import io from "socket.io-client";
 
-const socket = io("https://taxibackend-git-main-bmkl-basnayakes-projects.vercel.app");
+const socket = io("https://taxibackend-two.vercel.app");
 
 const sriLankaBounds = [
   [5.9189, 79.6524],

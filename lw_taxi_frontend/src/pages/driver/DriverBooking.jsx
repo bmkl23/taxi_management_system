@@ -3,7 +3,7 @@ import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { MapPin, Clock, CreditCard } from "lucide-react";
 
-const API_BASE_URL = "https://taxibackend-git-main-bmkl-basnayakes-projects.vercel.app/api";
+const API_BASE_URL = "https://taxibackend-two.vercel.app/api";
 
 export default function DriverBooking() {
   const { bookingId } = useParams();

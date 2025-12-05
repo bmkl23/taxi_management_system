@@ -22,7 +22,7 @@ export default function RegistrationPopup({ switchToLogin, handleCloseReg }) {
 
     try {
       const res = await axios.post(
-        "https://taxibackend-git-main-bmkl-basnayakes-projects.vercel.app/api/auth/register",
+        "https://taxibackend-two.vercel.app/api/auth/register",
         form
       );
       

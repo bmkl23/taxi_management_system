@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-const API_URL = "https://taxibackend-git-main-bmkl-basnayakes-projects.vercel.app/api/users"; 
+const API_URL = "https://taxibackend-two.vercel.app/api/users"; 
 
 const getAdminToken = () => {
   return localStorage.getItem("token") || localStorage.getItem("adminToken") || localStorage.getItem("authToken");

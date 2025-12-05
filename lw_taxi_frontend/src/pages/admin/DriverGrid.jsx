@@ -3,8 +3,8 @@ import axios from 'axios';
 import io from 'socket.io-client';
 
 
-const API_URL = 'https://taxibackend-git-main-bmkl-basnayakes-projects.vercel.app/api/drivers';
-const SOCKET_URL = 'https://taxibackend-git-main-bmkl-basnayakes-projects.vercel.app';
+const API_URL = 'https://taxibackend-two.vercel.app/api/drivers';
+const SOCKET_URL = 'https://taxibackend-two.vercel.app';
 
 
 const getAdminToken = () => {
