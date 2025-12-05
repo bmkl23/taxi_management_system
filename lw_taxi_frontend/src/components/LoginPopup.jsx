@@ -21,12 +21,12 @@ export default function LoginPopup({ switchToRegister, handleCloseLogin }) {
 
       try {
         
-        response = await axios.post("http://localhost:5000/api/drivers/login", form);
+        response = await axios.post("https://taxibackend-git-main-bmkl-basnayakes-projects.vercel.app/api/drivers/login", form);
         loginEndpoint = "driver";
       } catch (driverError) {
        
         try {
-          response = await axios.post("http://localhost:5000/api/auth/login", form);
+          response = await axios.post("https://taxibackend-git-main-bmkl-basnayakes-projects.vercel.app/api/auth/login", form);
           loginEndpoint = "auth";
         } catch (authError) {
           throw new Error("Invalid credentials");
