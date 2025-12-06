@@ -2,7 +2,14 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import io from "socket.io-client";
 
-const socket = io("https://taxibackend-two.vercel.app");
+const API_URL = "https://taxibackend-two.vercel.app";
+// const socket = io(API_URL);
+const socket = {
+  on: () => {},
+  off: () => {},
+  emit: () => {},
+  disconnect: () => {}
+};
 
 export default function TourHistoryPage() {
   const [bookings, setBookings] = useState([]);
@@ -20,8 +27,8 @@ export default function TourHistoryPage() {
         return;
       }
 
-      console.log(" Fetching bookings...");
-      const res = await axios.get("https://taxibackend-two.vercel.app/api/bookings/admin/all", {
+      console.log("Fetching bookings...");
+      const res = await axios.get(`${API_URL}/api/bookings/admin/all`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 

@@ -5,7 +5,14 @@ import "leaflet/dist/leaflet.css";
 import axios from "axios";
 import io from "socket.io-client";
 
-const socket = io("https://taxibackend-two.vercel.app");
+const API_URL = "https://taxibackend-two.vercel.app";
+// const socket = io(API_URL);
+const socket = {
+  on: () => {},
+  off: () => {},
+  emit: () => {},
+  disconnect: () => {}
+};
 
 const sriLankaBounds = [
   [5.9189, 79.6524],
@@ -30,14 +37,14 @@ const BookingRoutes = ({ user }) => {
     const userId = localStorage.getItem("userId");
 
     if (userId) {
-      console.log(" Registering user socket:", userId);
+      console.log("Registering user socket:", userId);
       socket.emit("user_connect", userId);
     }
 
 
     socket.on("booking_confirmed", (data) => {
-      console.log(" booking_confirmed:", data);
-      alert(` Your booking has been accepted by a driver!`);
+      console.log("booking_confirmed:", data);
+      alert(`Your booking has been accepted by a driver!`);
     });
 
     socket.on("booking_status_update", (data) => {
@@ -47,7 +54,7 @@ const BookingRoutes = ({ user }) => {
 
     socket.on("trip_completed", (data) => {
       console.log("Trip Completed:", data);
-      alert(" Your trip has been completed!");
+      alert("Your trip has been completed!");
     });
 
     return () => {
@@ -228,7 +235,7 @@ const BookingRoutes = ({ user }) => {
       const fare = (routeInfo.distance * 50).toFixed(2);
 
       const response = await axios.post(
-        "http://localhost:5000/api/bookings",
+        `${API_URL}/api/bookings`,
         {
           startLocation: startName,
           endLocation: endName,
@@ -244,7 +251,7 @@ const BookingRoutes = ({ user }) => {
       );
 
       alert(
-        ` Booking Confirmed!
+        `Booking Confirmed!
 
             From: ${startName}
             To: ${endName}
@@ -402,7 +409,7 @@ const BookingRoutes = ({ user }) => {
               {isSubmitting
                 ? "⏳ Submitting..."
                 : routeInfo.distance === 0 && destination
-                ? " Calculating..."
+                ? "Calculating..."
                 : "Confirm Booking"}
             </button>
 
@@ -415,7 +422,7 @@ const BookingRoutes = ({ user }) => {
             onClick={handleRefresh}
             className="bg-white text-gray-900 px-4 py-2 rounded-lg shadow-md border hover:bg-gray-50 transition"
           >
-             New Route
+            New Route
           </button>
         </div>
       </div>
