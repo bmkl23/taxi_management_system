@@ -18,62 +18,73 @@ export default function LoginPopup({ switchToRegister, handleCloseLogin }) {
 
     try {
       let response;
-      let loginEndpoint = "auth";
 
+      // Try driver login first
       try {
-        // Try driver login first
-        response = await axios.post(`${API_URL}/api/drivers/login`, form, {
-          validateStatus: () => true // Don't throw on any status
-        });
+        response = await axios.post(`${API_URL}/api/drivers/login`, form);
         
-        if (response.status === 200) {
-          loginEndpoint = "driver";
-        } else {
-          // Driver login failed, try user login
-          response = await axios.post(`${API_URL}/api/auth/login`, form);
-          loginEndpoint = "auth";
+        // Driver login successful
+        const { token, driver } = response.data;
+        
+        if (!token || !driver) {
+          throw new Error("Invalid response from driver login");
         }
-      } catch (error) {
-        // If driver request fails, try user login
+
+        // Save to localStorage
+        localStorage.setItem("token", token);
+        localStorage.setItem("userId", driver.id || driver._id);
+        localStorage.setItem("userName", driver.name);
+        localStorage.setItem("role", "DRIVER");
+        localStorage.setItem("userRole", "DRIVER");
+
+        // Set axios default header
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+        setMessage("Login Successful");
+        handleCloseLogin();
+        navigate("/driver-dashboard");
+        return;
+      } catch (driverError) {
+        // Driver login failed, try user login
         try {
           response = await axios.post(`${API_URL}/api/auth/login`, form);
-          loginEndpoint = "auth";
+          
+          const { token, user } = response.data;
+
+          if (!token || !user) {
+            throw new Error("Invalid response from user login");
+          }
+
+          // Save to localStorage
+          localStorage.setItem("token", token);
+          localStorage.setItem("userId", user.id || user._id);
+          localStorage.setItem("userName", user.name);
+          localStorage.setItem("role", user.role);
+          localStorage.setItem("userRole", user.role);
+
+          // Set axios default header
+          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+          setMessage("Login Successful");
+          handleCloseLogin();
+
+          // Redirect based on role
+          if (user.role === "ADMIN") {
+            navigate("/admin/dashboard");
+          } else if (user.role === "DRIVER") {
+            navigate("/driver-dashboard");
+          } else {
+            navigate("/map");
+          }
+          return;
         } catch (authError) {
           throw new Error("Invalid email or password");
         }
       }
 
-      const { token, user } = response.data;
-
-      if (!token || !user) {
-        throw new Error("Invalid response from server");
-      }
-
-      // Save to localStorage
-      localStorage.setItem("token", token);
-      localStorage.setItem("userId", user.id);
-      localStorage.setItem("userName", user.name);
-      localStorage.setItem("role", user.role);
-      localStorage.setItem("userRole", user.role);
-
-      // Set axios default header
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-      setMessage("Login Successful");
-      handleCloseLogin();
-
-      // Redirect based on role
-      if (user.role === "ADMIN") {
-        navigate("/admin/dashboard");
-      } else if (user.role === "DRIVER") {
-        navigate("/driver-dashboard");
-      } else {
-        navigate("/map");
-      }
-
     } catch (error) {
       console.error("Login error:", error);
-      setMessage(error.response?.data?.msg || error.message || "Invalid email or password");
+      setMessage(error.response?.data?.msg || error.response?.data?.message || error.message || "Invalid email or password");
     }
   };
 
