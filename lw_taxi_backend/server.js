@@ -13,39 +13,52 @@ const app = express();
 const server = http.createServer(app);
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
-  credentials: true
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    process.env.FRONTEND_URL || "https://your-frontend-url.vercel.app"
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
 }));
 app.use(express.json());
-
 
 app.use("/api/auth", require("./Routes/authRoutes"));
 app.use("/api/drivers", require("./Routes/driverRoutes"));
 app.use("/api/bookings", require("./Routes/bookingRoutes"));
 app.use("/api/users", require("./Routes/userRoutes"));
 
-app.get("/", (req, res) => res.send(" Taxi Management System API Running!"));
+app.get("/", (req, res) => res.send("Taxi Management System API Running!"));
 
+// Socket.IO Configuration
 const io = new Server(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      process.env.FRONTEND_URL || "https://your-frontend-url.vercel.app"
+    ],
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
     credentials: true,
+    allowEIO3: true
   },
+  transports: ["websocket", "polling"],
+  pingInterval: 25000,
+  pingTimeout: 20000
 });
+
 app.set("io", io);
 
-
 io.on("connection", (socket) => {
-  console.log(" Socket connected:", socket.id);
+  console.log("Socket connected:", socket.id);
 
   socket.on("user_connect", async (userId) => {
     if (!userId) {
-      return console.warn(" user_connect missing userId");
+      return console.warn("user_connect missing userId");
     }
     
     try {
-      console.log(" User connected:", userId);
+      console.log("User connected:", userId);
       const updatedUser = await User.findByIdAndUpdate(
         userId, 
         { socketId: socket.id },
@@ -53,13 +66,12 @@ io.on("connection", (socket) => {
       );
       console.log("User socket saved:", updatedUser?._id, socket.id);
     } catch (err) {
-      console.error(" User socket save error:", err.message);
+      console.error("User socket save error:", err.message);
     }
   });
 
-
   socket.on("disconnect", async () => {
-    console.log(" Socket disconnected:", socket.id);
+    console.log("Socket disconnected:", socket.id);
     try {
       const users = await User.find({ socketId: socket.id });
       for (const user of users) {
@@ -67,10 +79,9 @@ io.on("connection", (socket) => {
         console.log("Cleared socket for user:", user._id);
       }
     } catch (err) {
-      console.error(" Disconnect cleanup error:", err.message);
+      console.error("Disconnect cleanup error:", err.message);
     }
   });
-
 
   socket.on("driver_online", async (driverId) => {
     if (!driverId) return console.warn("driver_online event missing driverId", socket.id);
@@ -81,7 +92,7 @@ io.on("connection", (socket) => {
         { new: true }
       );
       if (updatedDriver) {
-        console.log(`🟢 Driver ${updatedDriver.name}(${driverId}) is AVAILABLE`);
+        console.log(`Driver ${updatedDriver.name}(${driverId}) is AVAILABLE`);
         io.emit("driver_status_update", {
           driverId: updatedDriver._id,
           status: updatedDriver.status,
@@ -89,22 +100,21 @@ io.on("connection", (socket) => {
         });
       }
     } catch (err) {
-      console.error(" Error in driver_online:", err.message);
+      console.error("Error in driver_online:", err.message);
     }
   });
-
 
   socket.on("accept_booking", async ({ bookingId, driverId }) => {
     try {
       if (!bookingId || !driverId) {
-        return console.warn(" accept_booking missing bookingId or driverId");
+        return console.warn("accept_booking missing bookingId or driverId");
       }
 
       console.log("Driver accepting booking:", bookingId);
 
       const booking = await Booking.findById(bookingId).populate("user assigned_driver");
       if (!booking) {
-        return console.error(" accept_booking: booking not found");
+        return console.error("accept_booking: booking not found");
       }
 
       booking.assigned_driver = driverId;
@@ -117,10 +127,9 @@ io.on("connection", (socket) => {
         { new: true }
       );
 
-
       const userSocketId = booking.user?.socketId;
       if (userSocketId) {
-        console.log(" Sending to user socket:", userSocketId);
+        console.log("Sending to user socket:", userSocketId);
         io.to(userSocketId).emit("booking_confirmed", {
           booking: booking._doc,
           driver: updatedDriver,
@@ -128,7 +137,6 @@ io.on("connection", (socket) => {
         });
       }
 
-  
       io.emit("booking_status_update", { 
         bookingId: booking._id, 
         status: booking.status,
@@ -141,23 +149,22 @@ io.on("connection", (socket) => {
         isAvailable: false 
       });
 
-      console.log(" Booking confirmed! Status:", booking.status);
+      console.log("Booking confirmed! Status:", booking.status);
 
     } catch (err) {
-      console.error(" Error accepting booking:", err.message);
+      console.error("Error accepting booking:", err.message);
     }
   });
-
 
   socket.on("reject_booking", async ({ bookingId, driverId }) => {
     try {
       if (!bookingId || !driverId) {
-        return console.warn(" reject_booking missing bookingId or driverId");
+        return console.warn("reject_booking missing bookingId or driverId");
       }
 
       const booking = await Booking.findById(bookingId).populate("user assigned_driver");
       if (!booking) {
-        return console.error(" reject_booking: booking not found");
+        return console.error("reject_booking: booking not found");
       }
 
       await Driver.findByIdAndUpdate(driverId, { status: "AVAILABLE", isAvailable: true });
@@ -187,26 +194,29 @@ io.on("connection", (socket) => {
         await booking.save();
       }
 
-
       io.emit("booking_status_update", { 
         bookingId: booking._id, 
         status: booking.status,
         booking: booking 
       });
     } catch (err) {
-      console.error(" Error in reject_booking:", err.message);
+      console.error("Error in reject_booking:", err.message);
     }
+  });
+
+  socket.on("error", (error) => {
+    console.error("Socket error:", error);
   });
 });
 
-
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log(" MongoDB Connected"))
-  .catch((err) => console.error(" MongoDB Connection Error:", err));
-
+  .then(() => console.log("MongoDB Connected"))
+  .catch((err) => console.error("MongoDB Connection Error:", err));
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log("🔌 Socket.IO ready for connections");
+  console.log(`Server running on port ${PORT}`);
+  console.log("Socket.IO ready for connections");
 });
+
+module.exports = app;
