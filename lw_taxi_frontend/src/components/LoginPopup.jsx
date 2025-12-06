@@ -23,10 +23,13 @@ export default function LoginPopup({ switchToRegister, handleCloseLogin }) {
       try {
         response = await axios.post(`${API_URL}/api/drivers/login`, form);
         
+        console.log("Driver login response:", response.data);
+        
         // Driver login successful
         const { token, driver } = response.data;
         
         if (!token || !driver) {
+          console.error("Missing token or driver in response:", response.data);
           throw new Error("Invalid response from driver login");
         }
 
